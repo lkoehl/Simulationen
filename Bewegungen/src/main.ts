@@ -1,5 +1,5 @@
 import './style.css';
-import { Chart, registerables } from 'chart.js';
+import { Chart, registerables, type ChartOptions } from 'chart.js';
 
 Chart.register(...registerables);
 
@@ -32,7 +32,8 @@ function updatePosition(clientX: number) {
   const center = trackRect.left + trackWidth / 2;
 
   let offset = clientX - center;
-  const maxOffset = trackWidth / 2;
+  const playerWidth = 40;
+  const maxOffset = (trackWidth - playerWidth) / 2;
   offset = Math.max(-maxOffset, Math.min(offset, maxOffset));
 
   position = offset;
@@ -60,6 +61,14 @@ startStopBtn.addEventListener('click', () => {
   startStopBtn.textContent = isRunning ? 'Stop' : 'Start';
   if (isRunning) {
     lastTime = performance.now() / 1000;
+
+    // Prevent spike by saving state when unpaused
+    history.push({ t: currentSimTime, s: position, v: 0, a: 0 });
+    (chartS.data.datasets[0].data as any[]).push({ x: currentSimTime, y: position });
+    (chartV.data.datasets[0].data as any[]).push({ x: currentSimTime, y: 0 });
+    (chartA.data.datasets[0].data as any[]).push({ x: currentSimTime, y: 0 });
+
+    requestAnimationFrame(physicsLoop);
   }
 });
 
@@ -80,7 +89,7 @@ window.addEventListener('resize', () => {
 });
 
 // Chart setup
-const commonOptions: any = {
+const commonOptions: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
   animation: false,
@@ -186,9 +195,8 @@ const V_WINDOW = 8; // average over n ticks for v
 const A_WINDOW = 12; // average over n ticks for a
 
 function physicsLoop() {
-  requestAnimationFrame(physicsLoop);
-
   if (!isRunning) return;
+  requestAnimationFrame(physicsLoop);
 
   const timeNow = performance.now() / 1000;
   const dt = timeNow - lastTime;
@@ -238,9 +246,20 @@ function physicsLoop() {
 
   history.push({ t, s, v: smoothedV, a: smoothedA });
 
+  const dataS = chartS.data.datasets[0].data as { x: number, y: number }[];
+  const dataV = chartV.data.datasets[0].data as { x: number, y: number }[];
+  const dataA = chartA.data.datasets[0].data as { x: number, y: number }[];
+
+  dataS.push({ x: t, y: s });
+  dataV.push({ x: t, y: smoothedV });
+  dataA.push({ x: t, y: smoothedA });
+
   // Cleanup history array
   if (history.length > HISTORY_TICKS) {
     history.shift();
+    dataS.shift();
+    dataV.shift();
+    dataA.shift();
   }
 
   // Update charts
@@ -253,11 +272,6 @@ function physicsLoop() {
       chart.options.scales.x.max = xMax;
     }
   });
-
-  // Update datasets
-  chartS.data.datasets[0].data = history.map(h => ({ x: h.t, y: h.s })) as any;
-  chartV.data.datasets[0].data = history.map(h => ({ x: h.t, y: h.v })) as any;
-  chartA.data.datasets[0].data = history.map(h => ({ x: h.t, y: h.a })) as any;
 
   chartS.update();
   chartV.update();
