@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bewegungssimulation</title>
+</head>
+
+<body>
+  <div id="app">
+    <header>
+      <h1>Bewegte Simulation</h1>
+      <div class="controls">
+        <label class="toggle-label"><input type="checkbox" id="toggle-v"> Geschwindigkeit (v)</label>
+        <label class="toggle-label"><input type="checkbox" id="toggle-a"> Beschleunigung (a)</label>
+        <button id="start-stop-btn">Stop</button>
+        <button id="reset-btn">Reset</button>
+      </div>
+    </header>
+
+    <main class="split-layout">
+      <section class="simulation-view">
+        <div class="track">
+          <div class="scenery-start">🏠</div>
+          <div class="scenery-finish">🏁</div>
+          <div id="origin-marker">0</div>
+          <div id="player" draggable="false">
+            <svg width="40" height="80" viewBox="0 0 40 80">
+              <!-- Kopf -->
+              <circle cx="20" cy="15" r="10" fill="currentColor" />
+              <!-- Rumpf -->
+              <rect x="15" y="25" width="10" height="30" rx="3" fill="currentColor" />
+              <!-- Arm Links -->
+              <path d="M 15 28 Q 5 45 10 55" stroke="currentColor" stroke-width="6" stroke-linecap="round"
+                fill="none" />
+              <!-- Arm Rechts -->
+              <path d="M 25 28 Q 35 45 30 55" stroke="currentColor" stroke-width="6" stroke-linecap="round"
+                fill="none" />
+              <!-- Bein Links -->
+              <path d="M 17 52 L 13 75" stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none" />
+              <!-- Bein Rechts -->
+              <path d="M 23 52 L 27 75" stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none" />
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <section class="charts-view">
+        <div class="chart-container">
+          <canvas id="chart-s"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-v"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-a"></canvas>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
