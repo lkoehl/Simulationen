@@ -65,9 +65,9 @@ startStopBtn.addEventListener('click', () => {
 
     // Prevent spike by saving state when unpaused
     history.push({ t: currentSimTime, s: position, v: 0, a: 0 });
-    (chartS.data.datasets[0].data as any[]).push({ x: currentSimTime, y: position });
-    (chartV.data.datasets[0].data as any[]).push({ x: currentSimTime, y: 0 });
-    (chartA.data.datasets[0].data as any[]).push({ x: currentSimTime, y: 0 });
+    (chartS.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: position });
+    (chartV.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: 0 });
+    (chartA.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: 0 });
 
     requestAnimationFrame(physicsLoop);
   }
