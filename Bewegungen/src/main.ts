@@ -32,7 +32,8 @@ function updatePosition(clientX: number) {
   const center = trackRect.left + trackWidth / 2;
 
   let offset = clientX - center;
-  const playerWidth = 40;
+  const measuredPlayerWidth = player.getBoundingClientRect().width;
+  const playerWidth = measuredPlayerWidth || 40;
   const maxOffset = (trackWidth - playerWidth) / 2;
   offset = Math.max(-maxOffset, Math.min(offset, maxOffset));
 
