@@ -26,6 +26,13 @@ interface State {
 }
 const history: State[] = [];
 
+// Smoothing ring buffers
+const vWindowBuf: number[] = [];
+let vSum = 0;
+
+const aWindowBuf: number[] = [];
+let aSum = 0;
+
 // Drag functionality
 function updatePosition(clientX: number) {
   trackRect = track.getBoundingClientRect();
@@ -81,6 +88,10 @@ resetBtn.addEventListener('click', () => {
   currentSimTime = 0;
   lastTime = performance.now() / 1000;
   history.length = 0;
+  vWindowBuf.length = 0;
+  vSum = 0;
+  aWindowBuf.length = 0;
+  aSum = 0;
   chartS.data.datasets[0].data = [];
   chartV.data.datasets[0].data = [];
   chartA.data.datasets[0].data = [];
@@ -183,16 +194,6 @@ toggleA.checked = false;
 chartContainerV.classList.add('hidden');
 chartContainerA.classList.add('hidden');
 
-function getAverage(arr: number[], window: number): number {
-  if (arr.length === 0) return 0;
-  const start = Math.max(0, arr.length - window);
-  let sum = 0;
-  for (let i = start; i < arr.length; i++) {
-    sum += arr[i];
-  }
-  return sum / (arr.length - start);
-}
-
 const HISTORY_TICKS = 600; // max elements
 const V_WINDOW = 8; // average over n ticks for v
 const A_WINDOW = 12; // average over n ticks for a
@@ -227,10 +228,13 @@ function physicsLoop() {
     }
   }
 
-  // We smooth v by appending this tick, and recalculating the moving average of previous vs
-  let currentVWindow = history.slice(-V_WINDOW).map(h => h.v);
-  currentVWindow.push(v);
-  let smoothedV = getAverage(currentVWindow, V_WINDOW);
+  // We smooth v using a rolling sum
+  vWindowBuf.push(v);
+  vSum += v;
+  if (vWindowBuf.length > V_WINDOW) {
+    vSum -= vWindowBuf.shift()!;
+  }
+  let smoothedV = vSum / vWindowBuf.length;
 
   if (history.length > 0) {
     // Calculate raw a
@@ -243,9 +247,13 @@ function physicsLoop() {
     }
   }
 
-  let currentAWindow = history.slice(-A_WINDOW).map(h => h.a);
-  currentAWindow.push(a);
-  let smoothedA = getAverage(currentAWindow, A_WINDOW);
+  // Smooth a using a rolling sum
+  aWindowBuf.push(a);
+  aSum += a;
+  if (aWindowBuf.length > A_WINDOW) {
+    aSum -= aWindowBuf.shift()!;
+  }
+  let smoothedA = aSum / aWindowBuf.length;
 
   history.push({ t, s, v: smoothedV, a: smoothedA });
 
