@@ -274,11 +274,13 @@ function physicsLoop() {
       chart.options.scales.x.min = xMin;
       chart.options.scales.x.max = xMax;
     }
-  });
 
-  chartS.update();
-  chartV.update();
-  chartA.update();
+    // Only trigger a Chart.js update if the canvas is currently visible.
+    const canvas = chart.canvas as HTMLCanvasElement | null;
+    if (canvas && canvas.offsetParent !== null) {
+      chart.update();
+    }
+  });
 }
 
 requestAnimationFrame(physicsLoop);
