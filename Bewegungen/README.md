@@ -23,7 +23,7 @@ Diese Simulation kommt komplett ohne massives Frontend-Framework aus:
 
 ## Lokale Entwicklung (Development)
 
-Voraussetzungen: Du benötigst [Node.js](https://nodejs.org/) auf deinem Rechner.
+Voraussetzungen: Du benötigst [Node.js](https://nodejs.org/) (Version `^20.19.0 || >=22.12.0`) auf deinem Rechner.
 
 1. **Abhängigkeiten installieren:**
    In diesem Verzeichnis den Paketmanager starten:

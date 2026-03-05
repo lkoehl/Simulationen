@@ -63,6 +63,8 @@ window.addEventListener('touchmove', (e) => {
   if (isDragging) updatePosition(e.touches[0].clientX);
 }, { passive: true });
 window.addEventListener('touchend', () => isDragging = false);
+window.addEventListener('touchcancel', () => isDragging = false);
+window.addEventListener('blur', () => isDragging = false);
 
 const startStopBtn = document.getElementById('start-stop-btn') as HTMLButtonElement;
 startStopBtn.addEventListener('click', () => {
@@ -73,10 +75,7 @@ startStopBtn.addEventListener('click', () => {
 
     // Prevent spike by saving state when unpaused
     const s = position / PIXELS_PER_METER;
-    history.push({ t: currentSimTime, s: s, v: 0, a: 0 });
-    (chartS.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: s });
-    (chartV.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: 0 });
-    (chartA.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: 0 });
+    pushHistoryPoint(currentSimTime, s, 0, 0);
 
     requestAnimationFrame(physicsLoop);
   }
@@ -198,6 +197,27 @@ const HISTORY_TICKS = 600; // max elements
 const V_WINDOW = 8; // average over n ticks for v
 const A_WINDOW = 12; // average over n ticks for a
 
+function pushHistoryPoint(t: number, s: number, v: number, a: number) {
+  history.push({ t, s, v, a });
+
+  const dataS = chartS.data.datasets[0].data as { x: number, y: number }[];
+  const dataV = chartV.data.datasets[0].data as { x: number, y: number }[];
+  const dataA = chartA.data.datasets[0].data as { x: number, y: number }[];
+
+  dataS.push({ x: t, y: s });
+  dataV.push({ x: t, y: v });
+  dataA.push({ x: t, y: a });
+
+  // Cleanup history array periodically to prevent O(n) shift per frame
+  if (history.length > Math.floor(HISTORY_TICKS * 1.5)) {
+    const removeCount = history.length - HISTORY_TICKS;
+    history.splice(0, removeCount);
+    dataS.splice(0, removeCount);
+    dataV.splice(0, removeCount);
+    dataA.splice(0, removeCount);
+  }
+}
+
 function physicsLoop() {
   if (!isRunning) return;
   requestAnimationFrame(physicsLoop);
@@ -255,23 +275,7 @@ function physicsLoop() {
   }
   let smoothedA = aSum / aWindowBuf.length;
 
-  history.push({ t, s, v: smoothedV, a: smoothedA });
-
-  const dataS = chartS.data.datasets[0].data as { x: number, y: number }[];
-  const dataV = chartV.data.datasets[0].data as { x: number, y: number }[];
-  const dataA = chartA.data.datasets[0].data as { x: number, y: number }[];
-
-  dataS.push({ x: t, y: s });
-  dataV.push({ x: t, y: smoothedV });
-  dataA.push({ x: t, y: smoothedA });
-
-  // Cleanup history array
-  if (history.length > HISTORY_TICKS) {
-    history.shift();
-    dataS.shift();
-    dataV.shift();
-    dataA.shift();
-  }
+  pushHistoryPoint(t, s, smoothedV, smoothedA);
 
   // Update charts
   const xMax = Math.max(maxHistoryTime, t);
