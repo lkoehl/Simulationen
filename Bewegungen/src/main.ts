@@ -12,6 +12,7 @@ let position = 0; // px relative to center
 let trackRect = track.getBoundingClientRect();
 
 // Initial Setup
+const PIXELS_PER_METER = 50;
 const maxHistoryTime = 10; // show last 10 seconds of data in chart
 let currentSimTime = 0;
 let lastTime = performance.now() / 1000;
@@ -64,8 +65,9 @@ startStopBtn.addEventListener('click', () => {
     lastTime = performance.now() / 1000;
 
     // Prevent spike by saving state when unpaused
-    history.push({ t: currentSimTime, s: position, v: 0, a: 0 });
-    (chartS.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: position });
+    const s = position / PIXELS_PER_METER;
+    history.push({ t: currentSimTime, s: s, v: 0, a: 0 });
+    (chartS.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: s });
     (chartV.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: 0 });
     (chartA.data.datasets[0].data as { x: number; y: number }[]).push({ x: currentSimTime, y: 0 });
 
@@ -128,7 +130,7 @@ const chartS = new Chart(ctxS, {
     plugins: { title: { display: true, text: 'Position s(t)', color: '#f8fafc' }, legend: { display: false } },
     scales: {
       ...commonOptions.scales,
-      y: { ...yConfig, min: -600, max: 600, title: { display: true, text: 's in px', color: '#94a3b8' } }
+      y: { ...yConfig, min: -15, max: 15, title: { display: true, text: 's in m', color: '#94a3b8' } }
     }
   }
 });
@@ -142,7 +144,7 @@ const chartV = new Chart(ctxV, {
     plugins: { title: { display: true, text: 'Geschwindigkeit v(t)', color: '#f8fafc' }, legend: { display: false } },
     scales: {
       ...commonOptions.scales,
-      y: { ...yConfig, min: -500, max: 500, title: { display: true, text: 'v in px/s', color: '#94a3b8' } }
+      y: { ...yConfig, min: -20, max: 20, title: { display: true, text: 'v in m/s', color: '#94a3b8' } }
     }
   }
 });
@@ -156,7 +158,7 @@ const chartA = new Chart(ctxA, {
     plugins: { title: { display: true, text: 'Beschleunigung a(t)', color: '#f8fafc' }, legend: { display: false } },
     scales: {
       ...commonOptions.scales,
-      y: { ...yConfig, min: -500, max: 500, title: { display: true, text: 'a in px/s²', color: '#94a3b8' } }
+      y: { ...yConfig, min: -50, max: 50, title: { display: true, text: 'a in m/s²', color: '#94a3b8' } }
     }
   }
 });
@@ -209,7 +211,7 @@ function physicsLoop() {
   lastTime = timeNow;
 
   const t = currentSimTime;
-  const s = position;
+  const s = position / PIXELS_PER_METER;
   let v = 0;
   let a = 0;
 
