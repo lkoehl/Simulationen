@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+/* Load the 'Inter' font via <link rel="preconnect"> and <link rel="stylesheet">
+   in the HTML <head> instead of using @import here to avoid render-blocking. */
 
 :root {
   --bg-color: #0f172a;
