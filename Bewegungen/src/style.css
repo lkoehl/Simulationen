@@ -26,7 +26,7 @@
 body {
   background-color: var(--bg-color);
   color: var(--text-primary);
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -35,8 +35,9 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   padding: 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
