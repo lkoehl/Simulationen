@@ -218,12 +218,23 @@ function pushHistoryPoint(t: number, s: number, v: number, a: number) {
   }
 }
 
+// Maximum allowed timestep; frames exceeding this (e.g. after tab backgrounding
+// or machine sleep) are skipped so that currentSimTime never jumps forward.
+const MAX_DT = 0.25;
+
 function physicsLoop() {
   if (!isRunning) return;
   requestAnimationFrame(physicsLoop);
 
   const timeNow = performance.now() / 1000;
   const dt = timeNow - lastTime;
+
+  // If dt is too large the tab was likely backgrounded – reset the clock and
+  // skip this frame to avoid a discontinuity in the charts.
+  if (dt > MAX_DT) {
+    lastTime = timeNow;
+    return;
+  }
 
   // update state optimally 60 times per second
   if (dt < 1 / 60) return;
