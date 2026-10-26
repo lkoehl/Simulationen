@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="de" data-theme="paper">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#eef2f6" />
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <title>Elektrisches Feld</title>
+  <!-- removed by the script; without a web server only the notice below shows -->
+  <style id="boot-style">#app { display: none; }</style>
+</head>
+
+<body>
+  <p id="file-warning" style="padding: 2rem; font: 16px sans-serif">Diese Simulation muss über einen Webserver geöffnet werden, z.&nbsp;B. mit <code>npm run preview</code> oder auf dem Schulserver (siehe README).</p>
+  <div id="app">
+    <header class="topbar">
+      <h1>Elektrisches Feld</h1>
+      <label class="scenario">
+        <span class="visually-hidden">Szenario</span>
+        <select id="scenario"></select>
+      </label>
+      <div class="topbar-actions">
+        <button id="play-btn" class="btn btn-primary" type="button" aria-pressed="true">
+          <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path class="icon-pause" d="M6 4h3v12H6zM11 4h3v12h-3z" /><path class="icon-play" d="M6 4l10 6-10 6z" /></svg>
+          <span>Pause</span>
+        </button>
+        <button id="reset-probes-btn" class="btn" type="button" title="Probeladungen an ihren Startpunkt zurücksetzen" aria-label="Probeladungen zurücksetzen">
+          <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10a6 6 0 1 0 2-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /><path d="M3 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <span>Probeladungen zurück</span>
+        </button>
+        <button id="clear-trails-btn" class="btn" type="button">Spuren löschen</button>
+        <button id="clear-btn" class="btn" type="button">Feld leeren</button>
+        <button id="save-btn" class="btn" type="button" title="Das Feldbild als PNG-Datei speichern" aria-label="Bild speichern">
+          <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9M6 8.5l4 4 4-4M4 15.5h12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <span>Bild speichern</span>
+        </button>
+        <button id="theme-btn" class="btn" type="button" title="Zwischen hellem Papier und dunkler Tafel wechseln">Tafel</button>
+        <button id="help-btn" class="btn btn-round" type="button" aria-label="Hilfe">?</button>
+      </div>
+    </header>
+
+    <aside class="toolbox" aria-label="Werkzeuge">
+      <section>
+        <h2>Ladungen</h2>
+        <div class="tools">
+          <button class="tool" data-tool="charge+" type="button">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="13" class="g-pos" /><path d="M13.5 20h13M20 13.5v13" class="g-sign" /></svg>
+            <span>Positive Ladung</span>
+          </button>
+          <button class="tool" data-tool="charge-" type="button">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="13" class="g-neg" /><path d="M13.5 20h13" class="g-sign" /></svg>
+            <span>Negative Ladung</span>
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Probeladungen</h2>
+        <div class="tools">
+          <button class="tool" data-tool="probe+" type="button">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="8" class="g-probe" /><path d="M16.5 20h7M20 16.5v7" class="g-probe-sign" /></svg>
+            <span>Positive Probe&shy;ladung</span>
+          </button>
+          <button class="tool" data-tool="probe-" type="button">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="8" class="g-probe" /><path d="M16.5 20h7" class="g-probe-sign" /></svg>
+            <span>Negative Probe&shy;ladung</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="conductor-section">
+        <h2>Leiter aus Metall</h2>
+        <div class="tools">
+          <button class="tool" data-tool="plate" type="button">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 6v28" class="g-metal" /></svg>
+            <span>Platte</span>
+          </button>
+          <button class="tool" data-tool="capacitor" type="button">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M12 7v26M28 7v26" class="g-metal" /><path d="M5 20h4M6.9 18v4" class="g-plus" /><path d="M31 20h4" class="g-minus" /></svg>
+            <span>Platten&shy;kondensator</span>
+          </button>
+          <button class="tool" data-tool="ring" type="button">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="12" class="g-metal" fill="none" /></svg>
+            <span>Ring (Käfig)</span>
+          </button>
+          <button class="tool" data-tool="box" type="button">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="8" y="11" width="24" height="18" class="g-metal" fill="none" /></svg>
+            <span>Kasten (Käfig)</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="motion-section">
+        <h2>Probeladungen bewegen sich</h2>
+        <div class="segmented" role="radiogroup" aria-label="Bewegung der Probeladungen">
+          <button type="button" role="radio" data-motion="friction" aria-checked="true">mit Reibung</button>
+          <button type="button" role="radio" data-motion="inertia" aria-checked="false">ohne Reibung</button>
+        </div>
+        <p class="note" id="motion-note">Die Probeladung gleitet genau entlang einer Feldlinie.</p>
+      </section>
+      <section class="display-section">
+        <h2>Anzeige</h2>
+        <div class="switches">
+          <label class="switch"><input type="checkbox" data-show="lines" checked autocomplete="off" /><span>Feldlinien</span></label>
+          <label class="switch"><input type="checkbox" data-show="vectors" autocomplete="off" /><span>Feldvektoren</span></label>
+          <label class="switch"><input type="checkbox" data-show="equi" autocomplete="off" /><span>Äquipotentiallinien</span></label>
+          <label class="switch"><input type="checkbox" data-show="induced" checked autocomplete="off" /><span>Ladungen auf Leitern</span></label>
+          <label class="switch"><input type="checkbox" data-show="force" checked autocomplete="off" /><span>Kraftpfeile</span></label>
+          <label class="switch"><input type="checkbox" data-show="trails" checked autocomplete="off" /><span>Spuren</span></label>
+        </div>
+        <label class="range">
+          <span>Feldliniendichte</span>
+          <input id="density" type="range" min="3" max="16" step="1" value="8" autocomplete="off" />
+        </label>
+      </section>
+
+    </aside>
+
+    <main class="stage">
+      <canvas id="field" aria-label="Simulationsfläche des elektrischen Feldes"></canvas>
+      <div class="inspector" id="inspector" hidden></div>
+      <div class="toast" id="toast" role="status" hidden><span></span><button type="button" class="btn">Rückgängig</button></div>
+    </main>
+  </div>
+
+  <dialog id="help">
+    <form method="dialog" class="help-body">
+      <h2>So funktioniert die Simulation</h2>
+      <ul>
+        <li><strong>Ziehen</strong> legt Ladungen, Probeladungen und Leiter ins Feld. Ein Tippen auf ein Werkzeug legt es in die Mitte.</li>
+        <li><strong>Antippen</strong> eines Objekts öffnet seine Einstellungen: Ladung, Größe, Drehung, Öffnung, Erdung.</li>
+        <li><strong>Herausziehen</strong> aus dem Feld entfernt ein Objekt, ebenso die Entf-Taste. <strong>Rückgängig</strong> holt es zurück.</li>
+        <li><strong>Start</strong> lässt die Probeladungen los. Sie werden vom Feld bewegt, verändern es aber selbst nicht.</li>
+        <li>Leiter sind aus Metall: Ihre Ladungen verschieben sich, bis das Innere feldfrei ist. Ein geschlossener Ring oder Kasten wirkt als Faradayscher Käfig. Berühren sich zwei Leiter, sind sie leitend verbunden; zieht man sie auseinander, behält jeder seinen Anteil der Ladung.</li>
+      </ul>
+      <h3>Was die Zeichen bedeuten</h3>
+      <ul>
+        <li><span class="legend legend-force"></span>Grüner Pfeil: Kraft auf die Probeladung. Je länger, desto größer die Kraft.</li>
+        <li><span class="legend legend-vector"></span>Feldvektoren: Alle sind gleich lang und zeigen die Richtung des Feldes. Je kräftiger, desto stärker das Feld.</li>
+        <li><span class="legend legend-equi"></span>Violette Linien: Äquipotentiallinien, zwischen zwei Nachbarlinien liegt immer dieselbe Spannung.</li>
+        <li><span class="legend legend-signs">+ −</span>Kleine Zeichen am Metall: dort sitzen die verschobenen Ladungen.</li>
+      </ul>
+      <h3>Modell</h3>
+      <p>Die Simulation rechnet zweidimensional: Jede Ladung ist ein langer Draht senkrecht zur Bildebene, jeder Ring ein langer Metallzylinder. Deshalb nimmt das Feld einer Punktladung hier mit 1/r ab statt mit 1/r². Dafür ist die Dichte der gezeichneten Feldlinien überall genau proportional zur Feldstärke.</p>
+      <p>Tastatur: Leertaste startet und pausiert, Entf löscht das ausgewählte Objekt, Strg/Cmd + Z macht das Löschen rückgängig, Esc hebt die Auswahl auf. Für den Beamer vergrößert Strg/Cmd + die ganze Oberfläche.</p>
+      <button class="btn btn-primary" value="close">Schließen</button>
+    </form>
+  </dialog>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>
