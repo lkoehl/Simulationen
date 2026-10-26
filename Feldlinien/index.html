@@ -5,14 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#eef2f6" />
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23fbfcfd'/%3E%3Cpath d='M9 16C13 7 19 7 23 16M9 16C13 25 19 25 23 16M9 16h14' fill='none' stroke='%231f2b3a' stroke-width='1.6'/%3E%3Ccircle cx='8' cy='16' r='5' fill='%23d7263d'/%3E%3Ccircle cx='24' cy='16' r='5' fill='%231e6fd9'/%3E%3C/svg%3E" />
   <title>Elektrisches Feld</title>
-  <!-- removed by the script; without a web server only the notice below shows -->
+  <!-- removed by the script; if it never runs, only the notice below shows -->
   <style id="boot-style">#app { display: none; }</style>
 </head>
 
 <body>
-  <p id="file-warning" style="padding: 2rem; font: 16px sans-serif">Diese Simulation muss über einen Webserver geöffnet werden, z.&nbsp;B. mit <code>npm run preview</code> oder auf dem Schulserver (siehe README).</p>
+  <p id="file-warning" style="padding: 2rem; font: 16px sans-serif">Die Simulation konnte nicht gestartet werden. Bitte öffne die Seite in einem aktuellen Browser (Chrome, Edge, Firefox oder Safari).</p>
   <div id="app">
     <header class="topbar">
       <h1>Elektrisches Feld</h1>
@@ -102,11 +102,11 @@
       <section class="display-section">
         <h2>Anzeige</h2>
         <div class="switches">
-          <label class="switch"><input type="checkbox" data-show="lines" checked autocomplete="off" /><span>Feldlinien</span></label>
+          <label class="switch"><input type="checkbox" data-show="lines" autocomplete="off" /><span>Feldlinien</span></label>
           <label class="switch"><input type="checkbox" data-show="vectors" autocomplete="off" /><span>Feldvektoren</span></label>
           <label class="switch"><input type="checkbox" data-show="equi" autocomplete="off" /><span>Äquipotentiallinien</span></label>
           <label class="switch"><input type="checkbox" data-show="induced" checked autocomplete="off" /><span>Ladungen auf Leitern</span></label>
-          <label class="switch"><input type="checkbox" data-show="force" checked autocomplete="off" /><span>Kraftpfeile</span></label>
+          <label class="switch"><input type="checkbox" data-show="force" autocomplete="off" /><span>Kraftpfeile</span></label>
           <label class="switch"><input type="checkbox" data-show="trails" checked autocomplete="off" /><span>Spuren</span></label>
         </div>
         <label class="range">
@@ -149,6 +149,13 @@
   </dialog>
 
   <script type="module" src="/src/main.ts"></script>
+  <script>
+    // shows the notice only if the simulation did not start (e.g. a very old browser)
+    setTimeout(function () {
+      var w = document.getElementById('file-warning');
+      if (w) w.style.display = 'block';
+    }, 3000);
+  </script>
 </body>
 
 </html>

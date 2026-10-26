@@ -17,7 +17,7 @@ import { draw, formatNumber, readColors, type FieldPicture, type Show, type View
 import { computeEquipotentials, sampleVectors } from './viz/equipotential';
 import { computeFieldLines, surfaceSamples, type Bounds } from './viz/fieldlines';
 
-// Only visible when the page is opened without a web server (see README).
+// Only shown if the simulation does not start (see the fallback in index.html).
 document.getElementById('file-warning')?.remove();
 document.getElementById('boot-style')?.remove();
 
@@ -41,7 +41,7 @@ let selectedId: number | null = null;
 let running = true;
 let motion: Motion = 'friction';
 let linesPerCharge = 8;
-const show: Show = { lines: true, vectors: false, equi: false, induced: true, force: true, trails: true };
+const show: Show = { lines: false, vectors: false, equi: false, induced: true, force: false, trails: true };
 
 const view: View = { width: 0, height: 0, dpr: 1, zoom: 1 };
 const solverCache = createSolverCache();

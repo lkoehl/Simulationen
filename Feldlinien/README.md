@@ -45,4 +45,10 @@ npm test         # Physik-Tests
 npm run build    # statischer Build in dist/
 ```
 
-Der Inhalt von `dist/` läuft auf jedem Webserver (z. B. Schul-Server, GitHub Pages). Direkt per Doppelklick aus dem Dateisystem geöffnet lädt der Browser die Skripte nicht; dafür `npm run preview` oder einen Webserver verwenden.
+## Veröffentlichen
+
+`npm run build` erzeugt **eine einzige Datei**: `dist/index.html`. Programm, Gestaltung und Schrift stecken darin, es werden keine weiteren Dateien und nichts aus dem Internet nachgeladen.
+
+- **Auf der eigenen Homepage:** Die Datei in einen beliebigen Ordner des Webservers hochladen, z. B. als `feldlinien/index.html` (Adresse `…/feldlinien/`) oder umbenannt als `feldlinien.html`.
+- **Ohne Server:** Die Datei per Doppelklick öffnen, z. B. vom USB-Stick oder aus dem Download-Ordner.
+- Szenarien lassen sich direkt verlinken: `…/feldlinien.html?szenario=kaefig`.
