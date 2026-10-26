@@ -3,63 +3,180 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bewegungssimulation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f172a'/%3E%3Cpath d='M4 25c6 0 9-15 24-17' fill='none' stroke='%2334d399' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='8' r='3.4' fill='%2338bdf8'/%3E%3C/svg%3E" />
+  <title>Der bewegte Mann</title>
+  <!-- removed by the script; if it never runs, only the notice below shows -->
+  <style id="boot-style">#app { display: none; }</style>
 </head>
 
 <body>
+  <p id="file-warning" style="padding: 2rem; font: 16px sans-serif">Die Simulation konnte nicht gestartet werden. Bitte öffne die Seite in einem aktuellen Browser (Chrome, Edge, Firefox oder Safari).</p>
   <div id="app">
-    <header>
-      <h1>Bewegte Simulation</h1>
-      <div class="controls">
-        <label class="toggle-label"><input type="checkbox" id="toggle-v"> Geschwindigkeit (v)</label>
-        <label class="toggle-label"><input type="checkbox" id="toggle-a"> Beschleunigung (a)</label>
-        <button id="start-stop-btn">Stop</button>
-        <button id="reset-btn">Reset</button>
+    <header class="topbar">
+      <h1>Der bewegte Mann</h1>
+      <div class="topbar-actions">
+        <button id="record-btn" class="btn btn-primary" type="button">
+          <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path class="icon-pause" d="M6 4h3v12H6zM11 4h3v12h-3z" /><circle class="icon-record" cx="10" cy="10" r="5.5" /></svg>
+          <span>Start</span>
+        </button>
+        <button id="clear-btn" class="btn" type="button">
+          <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10a6 6 0 1 0 2-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /><path d="M3 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <span>Neu</span>
+        </button>
+        <div class="switches" role="group" aria-label="Anzeige">
+          <label class="switch"><input type="checkbox" id="show-v" autocomplete="off" /><span>Geschwindigkeit</span></label>
+          <label class="switch"><input type="checkbox" id="show-a" autocomplete="off" /><span>Beschleunigung</span></label>
+          <label class="switch"><input type="checkbox" id="show-arrows" autocomplete="off" /><span>Pfeile</span></label>
+        </div>
+        <button id="help-btn" class="btn btn-round" type="button" aria-label="Hilfe">?</button>
       </div>
     </header>
 
-    <main class="split-layout">
-      <section class="simulation-view">
-        <div class="track">
-          <div class="scenery-start">🏠</div>
-          <div class="scenery-finish">🏁</div>
-          <div id="origin-marker">0</div>
-          <div id="player" draggable="false">
-            <svg width="40" height="80" viewBox="0 0 40 80">
-              <!-- Kopf -->
-              <circle cx="20" cy="15" r="10" fill="currentColor" />
-              <!-- Rumpf -->
-              <rect x="15" y="25" width="10" height="30" rx="3" fill="currentColor" />
-              <!-- Arm Links -->
-              <path d="M 15 28 Q 5 45 10 55" stroke="currentColor" stroke-width="6" stroke-linecap="round"
-                fill="none" />
-              <!-- Arm Rechts -->
-              <path d="M 25 28 Q 35 45 30 55" stroke="currentColor" stroke-width="6" stroke-linecap="round"
-                fill="none" />
-              <!-- Bein Links -->
-              <path d="M 17 52 L 13 75" stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none" />
-              <!-- Bein Rechts -->
-              <path d="M 23 52 L 27 75" stroke="currentColor" stroke-width="7" stroke-linecap="round" fill="none" />
+    <section class="stage" aria-label="Strecke">
+      <div class="stage-status">
+        <span class="clock">t = <output id="clock">0,00</output> s</span>
+        <span id="status" class="status"></span>
+      </div>
+      <div class="scene">
+        <svg class="scenery" viewBox="0 0 56 64" aria-hidden="true">
+          <path d="M8 30L28 12l20 18" class="sc-roof" />
+          <path d="M12 28h32v34H12z" class="sc-body" />
+          <path d="M24 62V46h9v16" class="sc-door" />
+          <path d="M16 34h7v6h-7z" class="sc-window" />
+        </svg>
+        <div class="wall" aria-hidden="true"></div>
+        <div class="lane" id="lane">
+          <div class="road"></div>
+          <div class="ruler" id="ruler" aria-hidden="true"></div>
+          <svg class="vectors" id="vectors" aria-hidden="true">
+            <defs>
+              <marker id="head-v" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" class="head-v" /></marker>
+              <marker id="head-a" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5 0 10z" class="head-a" /></marker>
+            </defs>
+            <g id="vec-v" class="vec vec-v"><line marker-end="url(#head-v)" /><text>v</text></g>
+            <g id="vec-a" class="vec vec-a"><line marker-end="url(#head-a)" /><text>a</text></g>
+          </svg>
+          <div id="man" role="slider" tabindex="0" aria-label="Mann, Position" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0" aria-valuetext="0 m">
+            <svg viewBox="0 0 44 88" aria-hidden="true">
+              <g class="pose pose-front">
+                <circle cx="22" cy="14" r="10" />
+                <rect x="16" y="26" width="12" height="30" rx="5" />
+                <path d="M16 30Q7 45 11 57M28 30Q37 45 33 57" class="limb" />
+                <path d="M19 54L15 83M25 54L29 83" class="limb leg" />
+              </g>
+              <g class="pose pose-stride">
+                <circle cx="22" cy="14" r="10" />
+                <path d="M27 9a10 10 0 0 1 4.6 7.4L27 16z" class="visor" />
+                <rect x="16" y="26" width="12" height="30" rx="5" />
+                <path d="M22 31L32 46l3 8M22 31L13 46l-2 9" class="limb" />
+                <path d="M22 54L31 68l2 15M22 54L15 69l-5 13" class="limb leg" />
+              </g>
+              <g class="pose pose-step">
+                <circle cx="22" cy="14" r="10" />
+                <path d="M27 9a10 10 0 0 1 4.6 7.4L27 16z" class="visor" />
+                <rect x="16" y="26" width="12" height="30" rx="5" />
+                <path d="M22 31L25 46l1 10M22 31L19 46l-1 10" class="limb" />
+                <path d="M22 54L25 70l0 13M22 54L19 70l-3 13" class="limb leg" />
+              </g>
             </svg>
           </div>
         </div>
-      </section>
+        <div class="wall" aria-hidden="true"></div>
+        <svg class="scenery" viewBox="0 0 56 64" aria-hidden="true">
+          <path d="M14 62V6" class="sc-pole" />
+          <path d="M15 8h28v18H15z" class="sc-flag" />
+          <path d="M15 8h7v6h-7zM29 8h7v6h-7zM22 14h7v6h-7zM36 14h7v6h-7zM15 20h7v6h-7zM29 20h7v6h-7z" class="sc-check" />
+        </svg>
+      </div>
+    </section>
 
-      <section class="charts-view">
-        <div class="chart-container">
-          <canvas id="chart-s"></canvas>
+    <section class="graphs" aria-label="Diagramme">
+      <div class="row" data-q="s">
+        <div class="panel">
+          <div class="panel-head"><span class="swatch"></span><h2>Position <var>s</var></h2></div>
+          <label class="value"><input id="val-s" type="text" inputmode="decimal" autocomplete="off" aria-label="Position in Meter" /><span>m</span><span class="badge">vorgegeben</span></label>
+          <input id="sl-s" type="range" min="-10" max="10" step="0.1" value="0" aria-label="Position" autocomplete="off" />
         </div>
-        <div class="chart-container hidden">
-          <canvas id="chart-v"></canvas>
+        <div class="plot"><canvas id="plot-s" aria-label="s-t-Diagramm"></canvas></div>
+      </div>
+
+      <div class="row" data-q="v" hidden>
+        <div class="panel">
+          <div class="panel-head"><span class="swatch"></span><h2>Geschwindigkeit <var>v</var></h2></div>
+          <label class="value"><input id="val-v" type="text" inputmode="decimal" autocomplete="off" aria-label="Geschwindigkeit in Meter pro Sekunde" /><span>m/s</span><span class="badge">vorgegeben</span></label>
+          <input id="sl-v" type="range" min="-10" max="10" step="0.1" value="0" aria-label="Geschwindigkeit" autocomplete="off" />
         </div>
-        <div class="chart-container hidden">
-          <canvas id="chart-a"></canvas>
+        <div class="plot">
+          <canvas id="plot-v" aria-label="v-t-Diagramm"></canvas>
+          <div class="zoom" data-plot="v">
+            <button type="button" class="btn btn-icon" data-zoom="1" aria-label="Herauszoomen" title="Größerer Wertebereich"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10" /></svg></button>
+            <button type="button" class="btn btn-icon" data-zoom="-1" aria-label="Hineinzoomen" title="Kleinerer Wertebereich"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M10 5v10" /></svg></button>
+          </div>
         </div>
-      </section>
-    </main>
+      </div>
+
+      <div class="row" data-q="a" hidden>
+        <div class="panel">
+          <div class="panel-head"><span class="swatch"></span><h2>Beschleunigung <var>a</var></h2></div>
+          <label class="value"><input id="val-a" type="text" inputmode="decimal" autocomplete="off" aria-label="Beschleunigung in Meter pro Quadratsekunde" /><span>m/s²</span><span class="badge">vorgegeben</span></label>
+          <input id="sl-a" type="range" min="-10" max="10" step="0.1" value="0" aria-label="Beschleunigung" autocomplete="off" />
+        </div>
+        <div class="plot">
+          <canvas id="plot-a" aria-label="a-t-Diagramm"></canvas>
+          <div class="zoom" data-plot="a">
+            <button type="button" class="btn btn-icon" data-zoom="1" aria-label="Herauszoomen" title="Größerer Wertebereich"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10" /></svg></button>
+            <button type="button" class="btn btn-icon" data-zoom="-1" aria-label="Hineinzoomen" title="Kleinerer Wertebereich"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M10 5v10" /></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="timebar">
+        <div class="timebar-controls">
+          <button id="play-btn" class="btn" type="button">
+            <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><path class="icon-play" d="M6 4l10 6-10 6z" /><path class="icon-pause" d="M6 4h3v12H6zM11 4h3v12h-3z" /></svg>
+            <span>Abspielen</span>
+          </button>
+          <label class="speed">
+            <span class="visually-hidden">Tempo der Wiedergabe</span>
+            <select id="speed">
+              <option value="1">1×</option>
+              <option value="0.5">½×</option>
+              <option value="0.25">¼×</option>
+            </select>
+          </label>
+        </div>
+        <div class="scrub"><input id="scrub" type="range" min="0" max="20" step="0.01" value="0" aria-label="Zeitpunkt" autocomplete="off" /></div>
+      </div>
+    </section>
   </div>
+
+  <div class="toast" id="toast" role="status" hidden><span></span><button type="button" class="btn">Rückgängig</button></div>
+
+  <dialog id="help">
+    <form method="dialog" class="help-body">
+      <h2>So funktioniert die Simulation</h2>
+      <ul>
+        <li><strong>Mann ziehen</strong> startet die Aufnahme. Die Diagramme zeichnen mit, was du tust.</li>
+        <li><strong>Geschwindigkeit oder Beschleunigung vorgeben:</strong> Regler oder Zahl einstellen und <strong>Start</strong> drücken. Der Mann läuft dann von selbst. Die vorgegebene Größe ist markiert.</li>
+        <li>An den <strong>Wänden</strong> bleibt der Mann stehen.</li>
+        <li>Eine Aufnahme dauert höchstens 20 Sekunden.</li>
+        <li><strong>Zeitleiste</strong> unter den Diagrammen ziehen oder in ein Diagramm tippen: Der Mann zeigt, wo er zu diesem Zeitpunkt war, die Felder zeigen die Werte. <strong>Abspielen</strong> wiederholt die Bewegung, auch in Zeitlupe.</li>
+        <li><strong>Ab hier aufnehmen</strong> verwirft alles nach dem gewählten Zeitpunkt und nimmt von dort neu auf. <strong>Neu</strong> löscht die ganze Aufnahme. Beides lässt sich rückgängig machen.</li>
+      </ul>
+      <h3>Anzeige</h3>
+      <ul>
+        <li>Geschwindigkeit und Beschleunigung sind am Anfang ausgeblendet, damit die Klasse ihre Diagramme erst vermuten kann.</li>
+        <li><strong>Pfeile</strong> zeigen <var>v</var> und <var>a</var> direkt am Mann. Je länger der Pfeil, desto größer der Betrag.</li>
+        <li>Die Knöpfe oben rechts in den Diagrammen ändern den Wertebereich.</li>
+      </ul>
+      <h3>Wie v und a entstehen</h3>
+      <p>Beim Ziehen misst die Simulation nur den Ort. Geschwindigkeit und Beschleunigung werden daraus berechnet, über ein kurzes Zeitfenster geglättet, weil eine Hand nie ganz gleichmäßig zieht. Deshalb erscheinen <var>v</var> und <var>a</var> einen Moment später als <var>s</var>. Wird <var>v</var> oder <var>a</var> vorgegeben, sind die Werte exakt.</p>
+      <p>Tastatur: Leertaste startet und pausiert. Ist der Mann ausgewählt, verschieben ihn die Pfeiltasten (mit Umschalt in großen Schritten).</p>
+      <button class="btn btn-primary" value="close">Schließen</button>
+    </form>
+  </dialog>
   <script type="module" src="/src/main.ts"></script>
 </body>
 

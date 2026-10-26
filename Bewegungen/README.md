@@ -1,57 +1,36 @@
-# Bewegte Simulation
+# Der bewegte Mann
 
-Eine interaktive HTML5 Physik-Simulation zur Veranschaulichung von relativer Position, Geschwindigkeit und Beschleunigung.
+Interaktive Simulation zu Ort, Geschwindigkeit und Beschleunigung, nach dem Vorbild der PhET-Simulation „The Moving Man“.
 
-Dieses Projekt wurde im Stil der bekannten **PhET Interactive Simulation "The Moving Man"** (Der bewegte Mann) nachempfunden. Es dient als moderne, web-native Alternative.
+## Was man damit machen kann
 
-![Bewegte Simulation Screenshot](./screenshot.png)
+- **Mann ziehen**: Mit Maus, Finger oder Pfeiltasten. Das Ziehen startet die Aufnahme, die Diagramme zeichnen mit.
+- **Geschwindigkeit oder Beschleunigung vorgeben**: Regler oder Zahl einstellen und **Start** drücken. Der Mann läuft dann von selbst, z. B. aus der Ruhe bei −8 m mit a = 1 m/s². Die vorgegebene Größe ist im Panel markiert.
+- **Wände** bei −10 m und +10 m: Der Mann bleibt dort stehen.
+- **s-t-, v-t- und a-t-Diagramm** untereinander mit gemeinsamer Zeitachse von 0 bis 20 s. Geschwindigkeit und Beschleunigung sind am Anfang ausgeblendet, damit die Klasse erst vermuten kann. Der Wertebereich von v und a lässt sich zoomen.
+- **Pfeile** für v und a direkt am Mann.
+- **Rückblick**: Zeitleiste ziehen oder in ein Diagramm tippen. Der Mann steht dann dort, wo er zu diesem Zeitpunkt war, die Felder zeigen s, v und a.
+- **Abspielen** wiederholt die Aufnahme, auch in Zeitlupe (½×, ¼×).
+- **Ab hier aufnehmen** verwirft alles nach dem gewählten Zeitpunkt und nimmt von dort weiter auf. **Neu** löscht die Aufnahme und stellt den Mann zurück an den Start. Beides lässt sich rückgängig machen.
 
-## Überblick & Features
+Tastatur: Leertaste startet und pausiert, Pfeiltasten verschieben den ausgewählten Mann (mit Umschalt in Meterschritten).
 
-- **Interaktiver "Bewegter Mann"**: Die Figur kann flüssig mit der Maus oder per Touch-Geste auf dem Smartphone über eine Rennstrecke (markiert durch Haus 🏠 und Ziel 🏁) gezogen werden.
-- **Echtzeit-Diagramme**: Simultan zur Bewegung generiert die Engine ein $s-t$- (Position), ein $v-t$- (Geschwindigkeit) und ein $a-t$-Diagramm (Beschleunigung).
-- **Integrierte Signalfrequenz-Glättung**: Um die mikroskopischen, fehlerhaften Ruckler menschlicher Mausführungen zu neutralisieren, glättet ein Moving-Average-Filter in Echtzeit rekursiv die Signale für die analytischen $v$- und $a$-Kurven. Ansonsten würden nur verrauschte Spikes angezeigt werden.
-- **Start/Stop-Kontrolle**: Wie beim Vorbild lässt sich die Zeit der Simulation jederzeit anhalten (Pausen-Zustand).
-- **Diagramm-Toggles**: Reduziere die kognitive Last durch Ausblenden komplexerer Ableitungsgraphen.
+## Wie gerechnet wird
 
-## Tech-Stack
-Diese Simulation kommt komplett ohne massives Frontend-Framework aus:
-- **Vanilla TypeScript** (Logik & Physik-Engine)
-- **Vite** (Rasend schneller Dev-Server & Bundling)
-- **Chart.js** (Hochperformantes HTML5-Canvas Rendering für die Achsen)
-- **Vanilla CSS** (Vollständig responsives, modernes Dark-Theme)
+Die Simulation läuft in festen Schritten von 1/60 s, eine Aufnahme fasst 20 s.
 
-## Lokale Entwicklung (Development)
+- **v oder a vorgegeben**: Ort und Geschwindigkeit werden exakt integriert (bei konstantem a gilt s = s₀ + v₀t + ½at² ohne Rundungsfehler).
+- **Mann gezogen**: Gemessen wird nur der Ort. Zeigerereignisse kommen unregelmäßig und nicht im Takt der Bildschirmbilder an. Deshalb wird jeder Zeiger-Ort mit seinem Zeitstempel gespeichert und zu jedem Simulationsschritt genau zu dessen Zeitpunkt interpoliert. v und a ergeben sich dann aus einer lokalen Ausgleichsgeraden bzw. -parabel über ±0,1 s bzw. ±0,25 s. So bleiben die Kurven ruhig, und v und a erscheinen nur kurz nach s.
 
-Voraussetzungen: Du benötigst [Node.js](https://nodejs.org/) (Version `^20.19.0 || >=22.12.0`) auf deinem Rechner.
+Die Tests (`npm test`) prüfen unter anderem, dass v und a einer verrauschten Handbewegung richtig rekonstruiert werden, dass gleichmäßig beschleunigte Bewegung exakt der Formel folgt und dass der Mann an den Wänden stehen bleibt.
 
-1. **Abhängigkeiten installieren:**
-   In diesem Verzeichnis den Paketmanager starten:
-   ```bash
-   npm install
-   ```
+## Entwicklung
 
-2. **Entwicklungsserver starten:**
-   ```bash
-   npm run dev
-   ```
-   Die Simulation läuft nun live unter `http://localhost:5173`. Sämtliche Änderungen an TypeScript-, HTML- oder CSS-Dokumenten werden in Millisekunden per Hot Module Replacement (HMR) in den Browser gepusht.
+Voraussetzung: Node.js `^20.19.0 || >=22.12.0`.
 
-## Build Process (Produktion & Hosting)
+```bash
+npm install
+npm run dev
+```
 
-Diese Applikation ist zu 100% statisch (Client-Side) und benötigt kein spezielles Backend. Um sie für einen Webserver fertig zu kompilieren:
-
-1. **Statischen Build erzeugen:**
-   ```bash
-   npm run build
-   ```
-   *Vite baut die Applikation nun im `dist/`-Ordner zusammen. Das TypeScript wird extrem effizient kompiliert und minifiziert; Assets werden gehasht und gebündelt.*
-
-2. **Hosting:**
-   Du kannst den Inhalt des neu erstellten **`dist`**-Ordners nehmen und auf **jedem** beliebigen Webserver ablegen (z. B. GitHub Pages, Vercel, Netlify, Apache, Nginx oder einem simplen FTP-Laufwerk der eigenen Schule/Uni).
-
-3. **Lokaler Test des Builds:**
-   Möchtest du vorher lokal prüfen, ob das kompilierte Produkt (aus dem `dist/` Ordner) korrekt läuft:
-   ```bash
-   npm run preview
-   ```
+`npm run build` erzeugt eine einzige, eigenständige Datei `dist/index.html` (Skript, Stile und Schrift eingebettet). Sie lässt sich überall hin kopieren oder per Doppelklick öffnen.
