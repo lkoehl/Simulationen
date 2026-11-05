@@ -260,8 +260,11 @@ input {
   hyphens: manual;
 }
 
-.tool:hover {
-  background: color-mix(in srgb, var(--panel-sunken) 70%, var(--accent) 12%);
+/* touch screens keep :hover after the finger lifts */
+@media (hover: hover) {
+  .tool:hover {
+    background: color-mix(in srgb, var(--panel-sunken) 70%, var(--accent) 12%);
+  }
 }
 
 .tool:active {
@@ -718,11 +721,6 @@ dialog::backdrop {
 
   .toolbox section {
     flex: none;
-  }
-
-  /* horizontal swipes scroll the toolbox, upward drags place objects */
-  .tool {
-    touch-action: pan-x;
   }
 
   .conductor-section .tools {

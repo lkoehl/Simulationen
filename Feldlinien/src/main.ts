@@ -172,9 +172,14 @@ function toStage(x: number, y: number) {
   return { x: view.width / 2 + x * view.zoom, y: view.height / 2 + y * view.zoom };
 }
 
-function insideCanvas(clientX: number, clientY: number) {
+function insideCanvas(clientX: number, clientY: number, rim = 0) {
   const r = canvas.getBoundingClientRect();
-  return clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom;
+  return (
+    clientX >= r.left + rim &&
+    clientX <= r.right - rim &&
+    clientY >= r.top + rim &&
+    clientY <= r.bottom - rim
+  );
 }
 
 // Physics and field picture
@@ -401,6 +406,8 @@ interface Drag {
 
 const MOVE_THRESHOLD_MOUSE = 4;
 const MOVE_THRESHOLD_TOUCH = 8;
+// a finger cannot leave the field at the screen edge, so the rim counts as outside
+const REMOVE_RIM_TOUCH = 24;
 
 canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -459,7 +466,7 @@ canvas.addEventListener('pointermove', (e) => {
   const p = toWorld(e.clientX, e.clientY);
   o.x = p.x + dragging.dx;
   o.y = p.y + dragging.dy;
-  dragging.outside = !insideCanvas(e.clientX, e.clientY);
+  dragging.outside = !insideCanvas(e.clientX, e.clientY, e.pointerType === 'mouse' ? 0 : REMOVE_RIM_TOUCH);
   stage.classList.toggle('removing', dragging.outside);
   if (o.kind === 'probe') {
     o.startX = o.x;
@@ -532,14 +539,40 @@ for (const tool of document.querySelectorAll<HTMLButtonElement>('.tool')) {
     const startX = e.clientX;
     const startY = e.clientY;
     let ghost: HTMLElement | null = null;
+    // Tools have touch-action: none, so the browser never takes a drag away
+    // from us. Swipes along the toolbox's scroll direction scroll it by hand.
+    const box = tool.closest<HTMLElement>('.toolbox')!;
+    const scrollsX = box.scrollWidth > box.clientWidth;
+    const scrollsY = box.scrollHeight > box.clientHeight;
+    let scrolling = false;
+    let lastX = startX;
+    let lastY = startY;
 
+    const showGhost = () => {
+      ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      ghost.innerHTML = tool.querySelector('svg')!.outerHTML;
+      document.body.appendChild(ghost);
+    };
     const move = (ev: PointerEvent) => {
       const threshold = ev.pointerType === 'mouse' ? MOVE_THRESHOLD_MOUSE : MOVE_THRESHOLD_TOUCH;
-      if (!ghost && Math.hypot(ev.clientX - startX, ev.clientY - startY) > threshold) {
-        ghost = document.createElement('div');
-        ghost.className = 'drag-ghost';
-        ghost.innerHTML = tool.querySelector('svg')!.outerHTML;
-        document.body.appendChild(ghost);
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!ghost && !scrolling && Math.hypot(dx, dy) > threshold) {
+        const alongScroll = scrollsX ? Math.abs(dx) > Math.abs(dy) : scrollsY && Math.abs(dy) > Math.abs(dx);
+        if (ev.pointerType !== 'mouse' && alongScroll) scrolling = true;
+        else showGhost();
+      }
+      if (scrolling) {
+        if (insideCanvas(ev.clientX, ev.clientY)) {
+          // the swipe carried on into the field: it was a drag after all
+          scrolling = false;
+          showGhost();
+        } else {
+          box.scrollBy(scrollsX ? lastX - ev.clientX : 0, scrollsX ? 0 : lastY - ev.clientY);
+          lastX = ev.clientX;
+          lastY = ev.clientY;
+        }
       }
       if (ghost) ghost.style.transform = `translate(${ev.clientX}px, ${ev.clientY}px)`;
     };
@@ -554,7 +587,7 @@ for (const tool of document.querySelectorAll<HTMLButtonElement>('.tool')) {
           const p = toWorld(ev.clientX, ev.clientY);
           addObject(createFromTool(kind, p.x, p.y));
         }
-      } else if (ev.type === 'pointerup') {
+      } else if (ev.type === 'pointerup' && !scrolling) {
         addFromTool(kind);
       }
     };
